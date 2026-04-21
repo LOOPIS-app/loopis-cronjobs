@@ -212,22 +212,13 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 }
 
 function get_lotten(){
-	$userl= get_user_by('user_login', 'lotten');
+	global $wpdb;
+	$lotten = $wpdb->get_var("SELECT id FROM wp_users WHERE user_login = 'lotten';");
 
-	if (!$userl && is_multisite()) {
-    	$users = get_users([
-    	    'search'         => 'lotten',
-    	    'search_columns' => ['user_login', 'user_nicename', 'user_email'],
-    	    'number'         => 1
-    	]);
-    	$userl = $users[0] ?? false;
+	if (!$lotten) {
+	    $lotten = 3; 
 	}
-	
-	if ($userl) {
-	    $lotten = $userl->ID;
-	} else {
-	       $lotten = 3; 
-	}
+
 	return $lotten;
 }
 
