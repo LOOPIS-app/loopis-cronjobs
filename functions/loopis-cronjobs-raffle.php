@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 
 /** CRON: RAFFLE */
 // Cronjob initiatied at 12 every day
-function cron_job_raffle() {
+function loopis_cronjobs_raffle() {
 	// Set start time
 	$start_time = new DateTime(current_time('mysql'));
 	
@@ -155,7 +155,7 @@ function cron_job_raffle() {
 
 /** CRON: RAFFLE NETWORK */
 // Cronjob initiatied at 12 every day for each site
-function cron_job_raffle_network() {
+function loopis_cronjobs_raffle_network() {
 	if (is_multisite(  )){
 		$sites = get_sites(['fields' => 'ids']);
 		$exclude = get_option('loopis_excluded_raffle') ?? false;
@@ -166,10 +166,10 @@ function cron_job_raffle_network() {
 				}
 			}
 			switch_to_blog($site);
-			cron_job_raffle();
+			loopis_cronjobs_raffle();
 			restore_current_blog();
 		}
 	}else{
-		cron_job_raffle();
+		loopis_cronjobs_raffle();
 	}
 }

@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 /** CRON: ARCHIVE */
-function cron_job_archive() {
+function loopis_cronjobs_archive() {
     $start_time = new DateTime(current_time('mysql'));
     $now_time = new DateTime(current_time('mysql'));
     $four_weeks_ago = new DateTime(current_time('mysql'));
@@ -91,7 +91,7 @@ function cron_job_archive() {
 }
 
 /** CRON: ARCHIVE */
-function cron_job_archive_network() {
+function loopis_cronjobs_archive_network() {
     if (is_multisite(  )){
 		$sites = get_sites(['fields' => 'ids']);
 		$exclude = get_option('loopis_excluded_archive') ?? false;
@@ -102,10 +102,10 @@ function cron_job_archive_network() {
 				}
 			}
 			switch_to_blog($site);
-			cron_job_archive();
+			loopis_cronjobs_archive();
 			restore_current_blog();
 		}
 	}else{
-		cron_job_archive();
+		loopis_cronjobs_archive();
 	}
 }

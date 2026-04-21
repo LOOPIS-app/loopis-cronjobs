@@ -1,12 +1,15 @@
 <?php
-/*
-Plugin Name: LOOPIS Cronjobs
-Plugin URI: https://github.com/LOOPIS-app/loopis-config
-Description: Plugin for cronjob functionality on loopis page
-Version: 0.1 (beta)
-Author: The Develoopers
-Author URI: https://loopis.org
-*/
+/**
+ * Plugin Name: LOOPIS Cronjobs
+ * Plugin URI:  https://github.com/LOOPIS-app/loopis-cronjobs
+ * Description: Plugin for configuring the cronjobs of LOOPIS.app
+ * Version:     0.2
+ * Author:      The Develoopers
+ * Author URI:  https://loopis.org
+ * License:     GPL-3.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * Text Domain: loopis-cronjobs
+ */
 
 /*
  * Copyright (C) 2026 LOOPIS
@@ -23,15 +26,12 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin version
-define('LOOPIS_CRON_VERSION', '0.1');
-define('LOOPIS_CRON_DIR', plugin_dir_path(__FILE__));  
+define('LOOPIS_CRONJOBS_VERSION', '0.2');
+define('LOOPIS_CRONJOBS_DIR', plugin_dir_path(__FILE__));  
 
-function loopis_cron_include_files() {
-    $functions = LOOPIS_CRON_DIR . '/functions/';
+function loopis_cronjobs_include_files() {
+    $functions = LOOPIS_CRONJOBS_DIR . '/functions/';
     foreach (glob($functions . '/*.php') as $file) {
         include_once $file;
     }
 }
-
-
-

@@ -1,8 +1,15 @@
-# ⚙ LOOPIS cronjobs
-**Plugin configuring cronjobs for LOOPIS.app**
+# ⏱ LOOPIS Cronjobs
+**Plugin for configuring the cronjobs of LOOPIS.app**
 
-## 💾 Installation/Update
-Upload the zipped folder "loopis-cronjobs.zip" in WP Admin or use LOOPIS config.
+## 💡 Status
+We are making cronjobs work in multisite environment!
+
+## 📋 Changelog
+See [CHANGELOG.md](CHANGELOG.md)
+
+## 💾 Installation
+Installation & updates are managed by plugin "LOOPIS Config".
+Or: Upload the zipped folder "loopis-cronjobs.zip" in WP Admin.
 
 ## 👤 Contributors
-Hubert Hilborn
+Hubert Hilborn, Johan Hagvil

@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 
 /** CRON: REMINDERS */
 // Cronjob initiatied every fifth hour
-function cron_job_reminders() {
+function loopis_cronjobs_reminders() {
     // Set start time
     $start_time = new DateTime(current_time('mysql'));
 
@@ -132,7 +132,7 @@ function cron_job_reminders() {
 
 /** CRON: REMINDERS */
 // Cronjob initiatied every fifth hour
-function cron_job_reminders_network() {
+function loopis_cronjobs_reminders_network() {
     	if (is_multisite(  )){
 		$sites = get_sites(['fields' => 'ids']);
 		$exclude = get_option('loopis_excluded_reminders') ?? false;
@@ -143,10 +143,10 @@ function cron_job_reminders_network() {
 				}
 			}
 			switch_to_blog($site);
-			cron_job_reminders();
+			loopis_cronjobs_reminders();
 			restore_current_blog();
 		}
 	}else{
-		cron_job_reminders();
+		loopis_cronjobs_reminders();
 	}
 }
