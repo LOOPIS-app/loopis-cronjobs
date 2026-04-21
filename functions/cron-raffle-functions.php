@@ -221,8 +221,8 @@ function get_lotten(){
     	    'number'         => 1
     	]);
     	$userl = $users[0] ?? false;
-
 	}
+	
 	if ($userl) {
 	    $lotten = $userl->ID;
 	} else {

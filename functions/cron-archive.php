@@ -10,8 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 /** CRON: ARCHIVE */
-function cron_job_archive($blog_id) {
-    switch_to_blog($blog_id);
+function cron_job_archive() {
     $start_time = new DateTime(current_time('mysql'));
     $now_time = new DateTime(current_time('mysql'));
     $four_weeks_ago = new DateTime(current_time('mysql'));
