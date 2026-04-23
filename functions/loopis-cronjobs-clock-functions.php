@@ -50,4 +50,4 @@ function loopis_cronjobs_clock(){
             break;
     }
     loopis_log_function_success('loopis_cronjobs_clock');
-
+}
