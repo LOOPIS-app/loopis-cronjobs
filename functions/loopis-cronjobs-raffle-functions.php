@@ -222,7 +222,7 @@ function get_lotten(){
 	);
 
 	if (!isset($lotten)) {
-	    $lotten = 3; 
+	    $lotten = 11; // TODO: change to new LOTTEN ID in Multisite
 	}
 
 	return $lotten;
