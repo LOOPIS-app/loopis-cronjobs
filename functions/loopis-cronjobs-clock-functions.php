@@ -27,7 +27,11 @@ function loopis_cronjobs_clock(){
             loopis_log_level1('Its ' . $current_hour . "-o'clock, running reminders!");
             loopis_cronjobs_reminders_network();
             break;
-        case 12 :
+        case 10 :
+            loopis_log_level1('Its ' . $current_hour . "-o'clock, running reminders!");
+            loopis_cronjobs_reminders_network();
+        break;
+            case 12 :
             loopis_log_level1('Its ' . $current_hour . "-o'clock, running raffle!");
             loopis_cronjobs_raffle_network();
             break;
