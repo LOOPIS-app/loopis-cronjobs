@@ -213,10 +213,16 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 
 function get_lotten(){
 	global $wpdb;
-	$lotten = $wpdb->get_var("SELECT id FROM wp_users WHERE user_login = 'lotten';");
+	$lotten = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT ID FROM {$wpdb->users} WHERE user_login IN (%s, %s) LIMIT 1",
+			'lotten',
+			'LOTTEN'
+		)
+	);
 
-	if (!$lotten) {
-	    $lotten = 3; 
+	if (!isset($lotten)) {
+	    $lotten = 11; // TODO: change to new LOTTEN ID in Multisite
 	}
 
 	return $lotten;

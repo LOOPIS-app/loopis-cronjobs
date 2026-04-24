@@ -69,7 +69,7 @@ function loopis_cronjobs_archive() {
     $end_time = new DateTime(current_time('mysql'));
     $execution_time = $start_time->diff($end_time)->s;
 
-    $to = "hubert.hilborn@hotmail.com";//"lotten@loopis.app";
+    $to = "lotten@loopis.app";
     $subject = "⭕ Arkivering";
     $message = "
     <b>⭕ {$archived_count} annonser har arkiverats</b><br>

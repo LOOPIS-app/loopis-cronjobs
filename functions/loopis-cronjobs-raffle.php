@@ -125,7 +125,7 @@ function loopis_cronjobs_raffle() {
     $locker_current = $locker_query->found_posts;
 	
 	// Prepare email
-	$to = "hubert.hilborn@hotmail.com";//"lotten@loopis.app";
+	$to = "lotten@loopis.app";
 	$subject = "🎲 Lottning " . $start_time->format('d/m');
 	$message = "
 	<b>🎁 {$final_count} annonser hanterades</b><br>
