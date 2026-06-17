@@ -30,8 +30,8 @@ define('LOOPIS_CRONJOBS_VERSION', '0.2');
 define('LOOPIS_CRONJOBS_DIR', plugin_dir_path(__FILE__));  
 
 function loopis_cronjobs_include_files() {
-    $functions = LOOPIS_CRONJOBS_DIR . '/functions/';
+    $functions = LOOPIS_CRONJOBS_DIR . 'functions';
     foreach (glob($functions . '/*.php') as $file) {
-        include_once $file;
+        include $file;
     }
 }

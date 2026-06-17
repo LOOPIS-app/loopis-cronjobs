@@ -8,7 +8,9 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
-
+if(!function_exists('loopis_ledger_add_post')){
+	include LOOPIS_THEME_DIR . '/includes/functions/everyone/ledger-functions.php';
+}
 /** CRON: SWITCH */
 // Post with 0 participants
 function admin_action_switch(int $post_id) {
@@ -24,14 +26,15 @@ function admin_action_book_locker(int $winner_id, int $post_id) {
 	$winner_name = get_user_by('ID', $winner_id)->display_name;
 	$locker_code = get_locker_code(LOCKER_ID);
 	$author_id = get_post_field('post_author', $post_id);
-	
+	$timestamp = current_time('Y-m-d H:i:s');
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked', 'category' );
 	update_post_meta($post_id, 'fetcher', $winner_id);
-	update_post_meta($post_id, 'book_date', current_time('Y-m-d H:i:s'));
-	update_post_meta($post_id, 'raffle_date', current_time('Y-m-d H:i:s'));
-	
+	update_post_meta($post_id, 'book_date', $timestamp);
+	update_post_meta($post_id, 'raffle_date', $timestamp);
+
+    loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	$lotten = get_lotten();
 
 	// Send notification from LOTTEN to winner	
@@ -63,7 +66,7 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	$author_name = get_the_author_meta('display_name', $author_id);
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
-	
+	$timestamp = current_time('Y-m-d H:i:s');
 	$lotten = get_lotten();
 
 
@@ -72,8 +75,9 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked_custom', 'category' );
 	update_post_meta($post_id, 'fetcher', $winner_id);
-	update_post_meta($post_id, 'book_date', current_time('Y-m-d H:i:s'));
-	update_post_meta($post_id, 'raffle_date', current_time('Y-m-d H:i:s'));
+	update_post_meta($post_id, 'book_date', $timestamp);
+	update_post_meta($post_id, 'raffle_date', $timestamp);
+    loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	
 	// Send notification from LOTTEN to winner	
 	send_admin_notification_email ('🥳 Grattis @'.$winner_name.' – du har vunnit lottningen! <br>
@@ -115,13 +119,15 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	$participants = array_values($participants);    /* re-index */
 	shuffle($participants);                         /* shuffle the array randomly */
 	update_post_meta($post_id, 'queue', $participants);
-	
+	$timestamp = current_time('Y-m-d H:i:s');
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked', 'category' );
 	update_post_meta($post_id, 'fetcher', $winner_id);
-	update_post_meta($post_id, 'book_date', current_time('Y-m-d H:i:s'));
-	update_post_meta($post_id, 'raffle_date', current_time('Y-m-d H:i:s'));
+	update_post_meta($post_id, 'book_date',$timestamp );
+	update_post_meta($post_id, 'raffle_date', $timestamp);
+
+    loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	
 	// Send notification from LOTTEN to winner	
 	send_admin_notification_email ('🥳 Grattis @'.$winner_name.' – du har vunnit lottningen! <br>
@@ -174,15 +180,16 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 	$author_name = get_the_author_meta('display_name', $author_id);
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
-
+	$timestamp = current_time('Y-m-d H:i:s');
 	$lotten = get_lotten();
 
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked_custom', 'category' );
 	update_post_meta($post_id, 'fetcher', $winner_id);
-	update_post_meta($post_id, 'book_date', current_time('Y-m-d H:i:s'));
-	update_post_meta($post_id, 'raffle_date', current_time('Y-m-d H:i:s'));
+	update_post_meta($post_id, 'book_date', $timestamp);
+	update_post_meta($post_id, 'raffle_date', $timestamp);
+    loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	
 	// Send notification from LOTTEN to winner	
 	send_admin_notification_email ('🥳 Grattis @'.$winner_name.' – du har vunnit lottningen! <br>
