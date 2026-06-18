@@ -161,7 +161,7 @@ function loopis_cronjobs_raffle_network() {
 		$exclude = get_option('loopis_excluded_raffle') ?? false;
 		foreach ($sites as $site){
 			if ($exclude){
-				if (in_array($site, $exclude)){
+				if (in_array($site, (array) $exclude)){
 					continue;
 				}
 			}
