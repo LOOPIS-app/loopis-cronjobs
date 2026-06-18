@@ -126,7 +126,7 @@ function loopis_cronjobs_raffle() {
 	
 	// Prepare email
 	$to = "lotten@loopis.app";
-	$subject = "🎲 Lottning " . $start_time->format('d/m');
+	$subject = "🎲 Lottning " . $start_time->format('d/m'). " i " . get_option('blogname');
 	$message = "
 	<b>🎁 {$final_count} annonser hanterades</b><br>
 	<hr>
