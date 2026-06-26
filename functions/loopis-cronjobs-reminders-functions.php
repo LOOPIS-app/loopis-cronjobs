@@ -63,7 +63,7 @@ function reminder_leave(int $reminder_leave, int $post_id) {
             '🗨 Skriv gärna i en kommentar till <span>🔔' . $fetcher_name . '</span> om/när du kommer att lämna.' .
             '</p>',
             $post_id,
-            1
+            2
         );
 
     } else {
@@ -122,7 +122,7 @@ function reminder_fetch(int $reminder_fetch, int $post_id) {
         '🗨 Skriv gärna i en kommentar till <span>🔔LOOPIS</span> när du kommer att hämta.' .
         '</p>',
         $post_id,
-        1
+        2
         );
 
     } else {
