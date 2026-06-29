@@ -138,7 +138,7 @@ function loopis_cronjobs_reminders_network() {
 		$exclude = get_option('loopis_excluded_reminders') ?? false;
 		foreach ($sites as $site){
 			if ($exclude){
-				if (in_array($site, $exclude)){
+				if (in_array($site, (array) $exclude)){
 					continue;
 				}
 			}
