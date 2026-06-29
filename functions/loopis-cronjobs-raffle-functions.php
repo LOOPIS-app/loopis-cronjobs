@@ -17,11 +17,12 @@ function admin_action_switch(int $post_id) {
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'old', 'category' );
 	$author_id = get_post_field('post_author', $post_id);
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$timestamp = current_time('Y-m-d H:i:s');
 	$location_value = 0 === $selected_locker ? $custom_location_value : 'Skåpet';
 
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
+                        'timestamp' => $timestamp_submitted,
                         'location' => $location_value
                         ]);
 }
@@ -34,7 +35,7 @@ function admin_action_book_locker(int $winner_id, int $post_id) {
 	$winner_name = get_user_by('ID', $winner_id)->display_name;
 	$locker_code = get_locker_code(LOCKER_ID);
 	$author_id = get_post_field('post_author', $post_id);
-	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$location_value = 0 === $selected_locker ? $custom_location_value : 'Skåpet';
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
@@ -44,7 +45,7 @@ function admin_action_book_locker(int $winner_id, int $post_id) {
 	update_post_meta($post_id, 'raffle_date', $timestamp);
 
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                            'timestamp' => $timestamp,
+                            'timestamp' => $timestamp_submitted,
                             'location' => $location_value
                             ]);
 	
@@ -81,6 +82,7 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$lotten = get_lotten();
 
 
@@ -93,7 +95,7 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	update_post_meta($post_id, 'raffle_date', $timestamp);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
+                        'timestamp' => $timestamp_submitted,
                         'location' => $location
                         ]);
 	
@@ -139,6 +141,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	shuffle($participants);                         /* shuffle the array randomly */
 	update_post_meta($post_id, 'queue', $participants);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked', 'category' );
@@ -146,7 +149,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	update_post_meta($post_id, 'book_date',$timestamp );
 	update_post_meta($post_id, 'raffle_date', $timestamp);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                            'timestamp' => $timestamp,
+                            'timestamp' => $timestamp_submitted,
                             'location' => $location_value
                             ]);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
@@ -203,6 +206,7 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$lotten = get_lotten();
 
 	// Set post meta
@@ -213,7 +217,7 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 	update_post_meta($post_id, 'raffle_date', $timestamp);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
+                        'timestamp' => $timestamp_submitted,
                         'location' => $location
                         ]);
 	
