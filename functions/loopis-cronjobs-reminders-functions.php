@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 function reminder_leave(int $reminder_leave, int $post_id) {
     // Get variables
     $number = $reminder_leave + 1;
-	$locker_code = get_locker_code(LOCKER_ID);
+	$locker_code = get_locker_code();
 
     // Get user data
     $author_id = get_post_field('post_author', $post_id);
@@ -80,7 +80,7 @@ function reminder_leave(int $reminder_leave, int $post_id) {
 function reminder_fetch(int $reminder_fetch, int $post_id) {
     // Get variables
     $number = $reminder_fetch + 1;
-    $locker_code = get_locker_code(LOCKER_ID);
+    $locker_code = get_locker_code();
 
     // Get user data
     $fetcher_id = get_post_meta($post_id, 'fetcher', true);
