@@ -34,7 +34,7 @@ function admin_action_book_locker(int $winner_id, int $post_id) {
 
 	// Get variables
 	$winner_name = get_user_by('ID', $winner_id)->display_name;
-	$locker_code = get_locker_code(LOCKER_ID);
+	$locker_code = get_locker_code();
 	$author_id = get_post_field('post_author', $post_id);
 	$timestamp_submitted = get_post_field('post_date', $post_id);
 	// Set post meta
@@ -161,7 +161,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	loopis_log_level2('		Notifying user: ' . $winner_id . "they're a winner");
 
 	// Send notification from LOTTEN to author
-	$locker_code = get_locker_code(LOCKER_ID);
+	$locker_code = get_locker_code();
 	send_admin_notification_email ('❤ '.$winner_name.' har vunnit lottningen! <br>
 	⌛ Lämna gärna i skåpet inom 24 timmar. <br>
 	🔓 Kod till skåpet: <b>'.$locker_code.'</b> <br>
