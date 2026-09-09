@@ -17,12 +17,14 @@ function admin_action_switch(int $post_id) {
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'old', 'category' );
 	$author_id = get_post_field('post_author', $post_id);
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$timestamp = current_time('Y-m-d H:i:s');
-	$location_value = 0 === $selected_locker ? $custom_location_value : 'Skåpet';
+
+	$location = get_post_meta($post_id, 'location', true);
 
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
-                        'location' => $location_value
+                        'timestamp' => $timestamp_submitted,
+                        'location' => $location
                         ]);
 }
 
@@ -32,20 +34,20 @@ function admin_action_book_locker(int $winner_id, int $post_id) {
 
 	// Get variables
 	$winner_name = get_user_by('ID', $winner_id)->display_name;
-	$locker_code = get_locker_code(LOCKER_ID);
+	$locker_code = get_locker_code();
 	$author_id = get_post_field('post_author', $post_id);
-	$timestamp = current_time('Y-m-d H:i:s');
-	$location_value = 0 === $selected_locker ? $custom_location_value : 'Skåpet';
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked', 'category' );
 	update_post_meta($post_id, 'fetcher', $winner_id);
 	update_post_meta($post_id, 'book_date', $timestamp);
 	update_post_meta($post_id, 'raffle_date', $timestamp);
+	$location = get_post_meta($post_id, 'location', true);
 
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                            'timestamp' => $timestamp,
-                            'location' => $location_value
+                            'timestamp' => $timestamp_submitted,
+                            'location' => $location
                             ]);
 	
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
@@ -81,6 +83,7 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$lotten = get_lotten();
 
 
@@ -93,7 +96,7 @@ function admin_action_book_custom(int $winner_id, int $post_id) {
 	update_post_meta($post_id, 'raffle_date', $timestamp);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
+                        'timestamp' => $timestamp_submitted,
                         'location' => $location
                         ]);
 	
@@ -126,7 +129,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	$winner_name = get_user_by('ID', $winner_id)->display_name;
 	$author_id = get_post_field('post_author', $post_id);
 	$author_name = get_the_author_meta('display_name', $author_id);
-	$location_value = 0 === $selected_locker ? $custom_location_value : 'Skåpet';
+	$location = get_post_meta($post_id, 'location', true);
 
 	$lotten = get_lotten();
 
@@ -139,6 +142,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	shuffle($participants);                         /* shuffle the array randomly */
 	update_post_meta($post_id, 'queue', $participants);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	// Set post meta
 	wp_set_object_terms( $post_id, null, 'category' ); 
 	wp_set_object_terms( $post_id, 'booked', 'category' );
@@ -146,8 +150,8 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	update_post_meta($post_id, 'book_date',$timestamp );
 	update_post_meta($post_id, 'raffle_date', $timestamp);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                            'timestamp' => $timestamp,
-                            'location' => $location_value
+                            'timestamp' => $timestamp_submitted,
+                            'location' => $location
                             ]);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	
@@ -157,7 +161,7 @@ function admin_action_raffle_locker(array $participants, int $tickets, int $post
 	loopis_log_level2('		Notifying user: ' . $winner_id . "they're a winner");
 
 	// Send notification from LOTTEN to author
-	$locker_code = get_locker_code(LOCKER_ID);
+	$locker_code = get_locker_code();
 	send_admin_notification_email ('❤ '.$winner_name.' har vunnit lottningen! <br>
 	⌛ Lämna gärna i skåpet inom 24 timmar. <br>
 	🔓 Kod till skåpet: <b>'.$locker_code.'</b> <br>
@@ -203,6 +207,7 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 	$author_phone = get_the_author_meta('wpum_phone', $author_id);
 	$location = get_post_meta($post_id, 'location', true);
 	$timestamp = current_time('Y-m-d H:i:s');
+	$timestamp_submitted = get_post_field('post_date', $post_id);
 	$lotten = get_lotten();
 
 	// Set post meta
@@ -213,7 +218,7 @@ function admin_action_raffle_custom(array $participants, int $tickets, int $post
 	update_post_meta($post_id, 'raffle_date', $timestamp);
     loopis_ledger_add_post('booked', $winner_id, $post_id, ['timestamp' => $timestamp]);
 	loopis_ledger_add_post('submitted', $author_id , $post_id ,[
-                        'timestamp' => $timestamp,
+                        'timestamp' => $timestamp_submitted,
                         'location' => $location
                         ]);
 	
