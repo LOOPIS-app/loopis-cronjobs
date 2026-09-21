@@ -3,7 +3,7 @@
  * Plugin Name: LOOPIS Cronjobs
  * Plugin URI:  https://github.com/LOOPIS-app/loopis-cronjobs
  * Description: Plugin for configuring the cronjobs of LOOPIS.app
- * Version:     0.2
+ * Version:     0.3
  * Author:      The Develoopers
  * Author URI:  https://loopis.org
  * License:     GPL-3.0-or-later
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin version
-define('LOOPIS_CRONJOBS_VERSION', '0.2');
+define('LOOPIS_CRONJOBS_VERSION', '0.3');
 define('LOOPIS_CRONJOBS_DIR', plugin_dir_path(__FILE__));  
 
 function loopis_cronjobs_include_files() {
