@@ -1,16 +1,23 @@
 <?php
 /**
- * Main function for raffle cronjob.
+ * Main functions for the daily raffle cronjob.
  *
- * Runs every day at 12.00.
+ * Triggered by the LOOPIS clock at 12.00 daily.
+ * Loops through all subsites in the network.
+ * Loops through all posts from yesterday and performs the raffle logic.
+ * Sends a daily report to the subsite admins after the raffle is done.
+ * 
+ * Complemented by extra functions in separate file.
  */
  
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-/** CRON: RAFFLE */
-// Cronjob initiatied at 12 every day
+/**
+ * Do the daily raffle on current subsite.
+ * And then send the daily report to the subsite admins.
+ */
 function loopis_cronjobs_raffle() {
 	// Set start time
 	$start_time = new DateTime(current_time('mysql'));
@@ -22,7 +29,7 @@ function loopis_cronjobs_raffle() {
 	$yesterday_start = $yesterday->format('Y-m-d 00:00:00');
 	$yesterday_end = $yesterday->format('Y-m-d 23:59:59');
 	
-	// args
+	// Get new posts
 	$args = array( 
 		'post_type' => 'post',
 		'posts_per_page' => -1,
@@ -34,27 +41,23 @@ function loopis_cronjobs_raffle() {
 			),
 		),
 	);
-	
-	// query
 	$the_query = new WP_Query( $args );
-	$total_count = $the_query->found_posts;
+	$new_count = $the_query->found_posts;
 	
-	// Set variables
+	// Initialize count variables
 	$available_count = 0;
 	$booked_count = 0;
-	$locker_count = 0;
 	$erased_count = 0;
 	$email_count = 0;
-	$mood_count = 0;
 	$happy_count = 0;
 	$sad_count = 0;
 		
-	// Start loop
+	// Start post loop
 	if( $the_query->have_posts() ):
 		while( $the_query->have_posts() ) : 
 		$the_query->the_post(); 
 	
-	// Get variables
+	// Get post meta variables
 		$post_id = get_the_ID();
 		loopis_log_level2('Raffle-ing post: ' . $post_id);
 		$location = get_post_meta($post_id, 'location', true);
@@ -70,14 +73,14 @@ function loopis_cronjobs_raffle() {
 	// Post with no participants
 	if ($tickets == 0) { admin_action_switch($post_id); $available_count++; }
 	
-	// Post with 1 participant & location locker
-	if ($tickets == 1 && $location == 'Skåpet') { $winner_id = $participants[0]; admin_action_book_locker($winner_id, $post_id); $booked_count++; $locker_count++; $email_count += 2; $happy_count += 2; }
+	// Post with 1 participant
+	if ($tickets == 1 && $location == 'Skåpet') { $winner_id = $participants[0]; admin_action_book_locker($winner_id, $post_id); $booked_count++; $email_count += 2; $happy_count += 2; }
 	
 	// Post with 1 participant & custom location
 	if ($tickets == 1 && $location != 'Skåpet') { $winner_id = $participants[0]; admin_action_book_custom($winner_id, $post_id); $booked_count++; $email_count += 2; $happy_count += 2; }
 	
-	// Post with 1+ participants & location locker
-	if ($tickets > 1 && $location == 'Skåpet') { admin_action_raffle_locker($participants, $tickets, $post_id); $booked_count++; $locker_count++; $email_count += $tickets + 1; $happy_count += 2; $sad_count += $tickets - 1; } 
+	// Post with 1+ participants
+	if ($tickets > 1 && $location == 'Skåpet') { admin_action_raffle_locker($participants, $tickets, $post_id); $booked_count++; $email_count += $tickets + 1; $happy_count += 2; $sad_count += $tickets - 1; } 
 	
 	// Post with 1+ participants & custom location
 	if ($tickets > 1 && $location != 'Skåpet') { admin_action_raffle_custom($participants, $tickets, $post_id); $booked_count++; $email_count += $tickets + 1; $happy_count += 2; $sad_count += $tickets - 1; }
@@ -88,25 +91,17 @@ function loopis_cronjobs_raffle() {
 	endwhile;
 	wp_reset_postdata();
 	endif;
-	
-	// Set end time
-	$end_time = new DateTime(current_time('mysql'));
-		
-	// Calculate the execution time
-	$interval = $start_time->diff($end_time);
-	$execution_time = $interval->format('%s');
-	
+
 	// Calculate % booked
-	$final_count = $total_count - $erased_count;
-	if ($final_count < 1) { $booked_percentage = 0; } else {
-	$booked_percentage = round(($booked_count / $final_count) * 100); }
+	$raffle_count = $new_count - $erased_count;
+	if ($raffle_count < 1) { $booked_percentage = 0; } else {
+	$booked_percentage = round(($booked_count / $raffle_count) * 100); }
 	
-	// Calculate % happy/sad
-	$mood_count = $happy_count + $sad_count;
+	// Calculate % happy/sad emails
 	if ($happy_count < 1) { $happy_percentage = 0; } else {
-	$happy_percentage = round(($happy_count / $mood_count) * 100); }
+	$happy_percentage = round(($happy_count / $email_count) * 100); }
 	if ($sad_count < 1) { $sad_percentage = 0; } else {
-	$sad_percentage = round(($sad_count / $mood_count) * 100); }
+	$sad_percentage = round(($sad_count / $email_count) * 100); }
 		
 	// Count stuff currently in locker
     $locker_args = array(
@@ -120,29 +115,88 @@ function loopis_cronjobs_raffle() {
             ),
         ),
     );
-
     $locker_query = new WP_Query($locker_args);
-    $locker_current = $locker_query->found_posts;
+    $locker_count = $locker_query->found_posts;
 	
+	// Count stuff coming to the locker
+    $coming_args = array(
+        'post_type'      => 'post',
+        'posts_per_page' => -1,
+        'tax_query'      => array(
+            array(
+                'taxonomy' => 'category',
+                'field'    => 'term_id',
+                'terms'    => loopis_cat('booked'),
+            ),
+        ),
+    );
+    $coming_query = new WP_Query($coming_args);
+    $coming_count = $coming_query->found_posts;
+
+	// Check locker warning setting
+	$locker_warning_value = loopis_get_setting('locker_warning', '0');
+	if ($locker_warning_value === '0') { $locker_warning = '✅ Varning för skåp är ej aktiv';
+	} else { $locker_warning = '<b>⚠ Varning för skåp är aktiv!</b>'; }
+
+	// Count active 'support' posts
+    $active_term = get_term_by('slug', 'active', 'support-category');
+	$support_args = array(
+        'post_type'      => 'support',
+        'posts_per_page' => -1,
+        'tax_query'      => array(
+            array(
+                'taxonomy' => 'support-category',
+                'field'    => 'term_id',
+                'terms'    => $active_term ? $active_term->term_id : 0,
+            ),
+        ),
+    );
+    $support_query = new WP_Query($support_args);
+    $support_current = $support_query->found_posts;
+		
+	// Calculate execution time
+	$end_time = new DateTime(current_time('mysql'));
+	$interval = $start_time->diff($end_time);
+	$execution_time = $interval->format('%s');
+	
+	// Get manager emails
+	$manager_emails = get_users(array(
+		'role'   => 'manager',
+		'fields' => array('user_email')
+	));
+	$manager_emails = wp_list_pluck($manager_emails, 'user_email');
+
 	// Prepare email
-	$to = "lotten@loopis.app";
-	$subject = "🎲 Lottning " . $start_time->format('d/m'). " i " . get_option('blogname');
+	$to = "admin@loopis.app," . implode(',', $manager_emails);
+	$subject = "🌈 LOOPIS - " . $blog_name  . " (" . $start_time->format('d/m') . ")";
 	$message = "
-	<b>🎁 {$final_count} annonser hanterades</b><br>
+	<p>📊 Här är dagens rapport från LOOPIS " . $blog_name . "</p>
+	
+	<h2>🎲 Lottning</h2>
 	<hr>
-	❤ {$booked_count} annonser paxades (♻ {$booked_percentage}%)<br>
-	🟢 {$available_count} annonser blev först till kvarn<br>
-	🔥 {$erased_count} annonser raderades<br>
-	<br>
+	🎁 {$raffle_count} nya annonser skapades igår<br>
+	❤ {$booked_count} paxades vid dagens lottning ({$booked_percentage}%)
+	🟢 {$available_count} blev först till kvarn<br>
+	🔥 {$erased_count} annonser togs bort i förtid<br>
 	✉ {$email_count} email skickades<br>
 	🙂 {$happy_count} glada besked ({$happy_percentage}%)<br>
 	☹ {$sad_count} tråkiga besked ({$sad_percentage}%)<br>
-	<br>
-	🐎 Processen tog {$execution_time} sekunder<br>
-	⏰ " . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . "<br>
-	<br>
-	▶ {$locker_count} saker ska nu till skåpet<br>
-	⏹ {$locker_current} saker finns i skåpet just nu
+
+	<h2>🗄 Skåpet</h2>
+	<hr>
+	⏹ {$locker_count} saker finns i skåpet just nu<br>
+	▶ {$coming_count} saker är på väg till skåpet<br>
+	{$locker_warning}<br>
+
+	<h2>🛟 Support</h2>
+	<hr>
+	🔴 {$support_current} aktiva support-trådar<br>
+	
+	<h2>🤖 Övrigt</h2>
+	<hr>
+	⏱ Tidsåtgång " . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . " ({$execution_time} sekunder)<br>
+	💌 Rapport skickad till: {$to}<br>
+	
 	";
 	$headers = array(
 		'From: info@loopis.app',
@@ -153,8 +207,10 @@ function loopis_cronjobs_raffle() {
 	wp_mail($to, $subject, $message, $headers);	
 }
 
-/** CRON: RAFFLE NETWORK */
-// Cronjob initiatied at 12 every day for each site
+/**
+ * Our cronjob clock triggers this function at 12.00 daily.
+ * It will loop through all subsites and execute the function above.
+ */
 function loopis_cronjobs_raffle_network() {
 	if (is_multisite(  )){
 		$sites = get_sites(['fields' => 'ids']);
@@ -169,7 +225,7 @@ function loopis_cronjobs_raffle_network() {
 			loopis_cronjobs_raffle();
 			restore_current_blog();
 		}
-	}else{
+	} else {
 		loopis_cronjobs_raffle();
 	}
 }
