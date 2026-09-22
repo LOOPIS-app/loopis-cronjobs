@@ -135,8 +135,8 @@ function loopis_cronjobs_raffle() {
 
 	// Check locker warning setting
 	$locker_warning_value = loopis_get_setting('locker_warning', '0');
-	if ($locker_warning_value === '0') { $locker_warning = '✅ Varning för skåp är ej aktiv';
-	} else { $locker_warning = '<b>⚠ Varning för skåp är aktiv!</b>'; }
+	if ($locker_warning_value === '0') { $locker_warning = '✅ Varning för skåp ej aktiv';
+	} else { $locker_warning = '<b>⚠ Varning för skåp aktiv!</b>'; }
 
 	// Count active 'support' posts
     $active_term = get_term_by('slug', 'active', 'support-category');
@@ -153,11 +153,38 @@ function loopis_cronjobs_raffle() {
     );
     $support_query = new WP_Query($support_args);
     $support_current = $support_query->found_posts;
-		
-	// Calculate execution time
-	$end_time = new DateTime(current_time('mysql'));
-	$interval = $start_time->diff($end_time);
-	$execution_time = $interval->format('%s');
+
+	$support_symbol = $support_current > 0 ? '🔴' : '🟢';
+
+	// Count number of members
+	$role_counts = count_users()['avail_roles'];
+	$member_count = $role_counts['member'] ?? 0;
+	$member_pending_count = $role_counts['member_pending'] ?? 0;
+	
+	// Count new users added yesterday
+	$new_users_yesterday = count(get_users([
+    'date_query' => [
+        [
+            'after'     => $yesterday_start,
+            'before'    => $yesterday_end,
+            'inclusive' => true,
+        ],
+    ],
+    'fields' => 'ID',
+	]));
+
+	// Count new members added yesterday
+	$new_members_yesterday = count(get_users([
+	'role' => 'member',
+    'date_query' => [
+        [
+            'after'     => $yesterday_start,
+            'before'    => $yesterday_end,
+            'inclusive' => true,
+        ],
+    ],
+    'fields' => 'ID',
+	]));
 	
 	// Get manager emails
 	$manager_emails = get_users(array(
@@ -166,43 +193,61 @@ function loopis_cronjobs_raffle() {
 	));
 	$manager_emails = wp_list_pluck($manager_emails, 'user_email');
 
+	// Set email details
+	$blog_name = get_bloginfo('name');
+	$date = current_time('d/m');
+	$weekday = current_time('l');
+
+	// Calculate execution time
+	$end_time = new DateTime(current_time('mysql'));
+	$interval = $start_time->diff($end_time);
+	$execution_time = $interval->format('%s');
+	
 	// Prepare email
-	$to = "admin@loopis.app," . implode(',', $manager_emails);
-	$subject = "🌈 LOOPIS - " . $blog_name  . " (" . $start_time->format('d/m') . ")";
+	$to = "admin@loopis.app," . implode(', ', $manager_emails);
+	$subject = "🌈 " . $blog_name  . " (" . $weekday . " " . $date . ")";
 	$message = "
 	<p>📊 Här är dagens rapport från LOOPIS " . $blog_name . "</p>
 	
-	<h2>🎲 Lottning</h2>
+	<h3>🎲 Lottning</h3>
 	<hr>
 	🎁 {$raffle_count} nya annonser skapades igår<br>
-	❤ {$booked_count} paxades vid dagens lottning ({$booked_percentage}%)
+	❤ {$booked_count} paxades vid dagens lottning ({$booked_percentage}%)<br>
 	🟢 {$available_count} blev först till kvarn<br>
 	🔥 {$erased_count} annonser togs bort i förtid<br>
 	✉ {$email_count} email skickades<br>
-	🙂 {$happy_count} glada besked ({$happy_percentage}%)<br>
-	☹ {$sad_count} tråkiga besked ({$sad_percentage}%)<br>
+	😃 {$happy_count} glada besked ({$happy_percentage}%)<br>
+	☹️ {$sad_count} tråkiga besked ({$sad_percentage}%)<br>
 
-	<h2>🗄 Skåpet</h2>
+	<h3>⏹ Skåpet</h3>
 	<hr>
-	⏹ {$locker_count} saker finns i skåpet just nu<br>
+	⏺️ {$locker_count} saker finns i skåpet just nu<br>
 	▶ {$coming_count} saker är på väg till skåpet<br>
 	{$locker_warning}<br>
 
-	<h2>🛟 Support</h2>
+	<h3>🛟 Support</h3>
 	<hr>
-	🔴 {$support_current} aktiva support-trådar<br>
+	{$support_symbol} {$support_current} aktiva support-trådar<br>
 	
-	<h2>🤖 Övrigt</h2>
+	<h3>👤 Medlemmar</h3>
 	<hr>
-	⏱ Tidsåtgång " . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . " ({$execution_time} sekunder)<br>
-	💌 Rapport skickad till: {$to}<br>
-	
+	📋 {$new_users_yesterday} nya registreringar igår<br>
+	🎉 {$new_members_yesterday} nya medlemmar igår<br>
+	⏳ {$member_pending_count} ofärdiga registreringar<br>
+	👥 {$member_count} medlemmar totalt<br>
+
+	<h3>🤖 Övrigt</h3>
+	<hr>
+	⏱ Tidsåtgång: {$execution_time} sekunder (" . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . ")<br>
+	💌 Mottagare: {$to}<br>
 	";
+
 	$headers = array(
 		'From: info@loopis.app',
 		'Content-Type: text/html; charset=UTF-8',
 		'X-Emoji-Service: twemoji'
 			);
+	
 	// Send email
 	wp_mail($to, $subject, $message, $headers);	
 }
