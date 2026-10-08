@@ -57,14 +57,10 @@ function reminder_leave(int $reminder_leave, int $post_id) {
 		💚 Beklagar fördröjningen! @' . $fetcher_name . '
         ', $post_id, 2, $fetcher_id);
 		
-        add_admin_comment(
-            '<p class="reminder">' .
-            '⚠ Påminnelse #3 att lämna i skåpet <span>🔔' . $author_name . '</span><br>' .
-            '🗨 Skriv gärna i en kommentar till <span>🔔' . $fetcher_name . '</span> om/när du kommer att lämna.' .
-            '</p>',
-            $post_id,
-            1
-        );
+        add_admin_comment('<p class="reminder">
+        ⚠ Påminnelse #3 att lämna i skåpet <span>🔔' . $author_name . '</span><br>
+        🗨 Skriv gärna i en kommentar till <span>🔔' . $fetcher_name . '</span> om/när du kommer att lämna.
+        </p>', $post_id, 2);
 
     } else {
         return 0;
@@ -116,14 +112,10 @@ function reminder_fetch(int $reminder_fetch, int $post_id) {
         🔓 Kod till skåpet: <b>' . $locker_code . '</b>
         ', $post_id, 2, $fetcher_id);
 
-        add_admin_comment(
-        '<p class="reminder">' .
-        '⚠ Påminnelse #3 att hämta i skåpet <span>🔔' . $fetcher_name . '</span><br>' .
-        '🗨 Skriv gärna i en kommentar till <span>🔔LOOPIS</span> när du kommer att hämta.' .
-        '</p>',
-        $post_id,
-        1
-        );
+        add_admin_comment('<p class="reminder">
+        ⚠ Påminnelse #3 att hämta i skåpet <span>🔔' . $fetcher_name . '</span><br>
+        🗨 Skriv gärna i en kommentar till <span>🔔LOOPIS</span> när du kommer att hämta.
+        </p>', $post_id, 2);
 
     } else {
         return 0;
