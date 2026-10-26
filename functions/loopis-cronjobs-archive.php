@@ -12,40 +12,46 @@ if (!defined('ABSPATH')) {
 /** CRON: ARCHIVE */
 function loopis_cronjobs_archive() {
     $start_time = new DateTime(current_time('mysql'));
-    $now_time = new DateTime(current_time('mysql'));
     $four_weeks_ago = new DateTime(current_time('mysql'));
     $four_weeks_ago->modify('-28 days');
 
+    // Set category IDs
     $old_category_ids = loopis_cats(['old', 'paused']);
     $new_category_id = loopis_cat('archived');
 
+    // Query for old posts in the specified categories
     $args = array(
         'category__in' => $old_category_ids,
         'posts_per_page' => -1,
         'fields' => 'ids',
     );
-
     $old_posts = new WP_Query($args);
     $checked_count = $old_posts->found_posts;
 
+    // Initialize array to store user IDs of authors whose posts are archived
     $user_ids = array();
     $archived_count = 0;
 
+    // Loop through old posts and archive if necessary
     if ($old_posts->have_posts()) {
         foreach ($old_posts->posts as $post_id) {
-            $extend_date = get_post_meta($post_id, 'extend_date', true);
+            // Initialize archive flag
             $do_archive = null;
 
-            if ($extend_date) {
-                $extend_date_time = new DateTime($extend_date);
-                $extend_date_time->modify('+28 days');
+            // Check if post life is extended
+            $extend_date_meta = get_post_meta($post_id, 'extend_date', true);
+            if ($extend_date_meta) {
+                $extend_date = new DateTime($extend_date_meta);
 
-                if ($extend_date_time <= $now_time) {
+                // If the extension date is more than four weeks ago, mark for archiving
+                if ($extend_date < $four_weeks_ago) {
                     $do_archive = true;
                 }
             } else {
+                // If no extension date is set, check the original publish date
                 $publish_date = new DateTime(get_the_date('Y-m-d H:i:s', $post_id));
 
+                // If the publish date is more than four weeks ago, mark for archiving
                 if ($publish_date < $four_weeks_ago) {
                     $do_archive = true;
                 }
@@ -64,12 +70,15 @@ function loopis_cronjobs_archive() {
             }
         }
     }
-
+    // Count unique users affected (previously used in the removed email report)
     $unique_users = count($user_ids);
+
+    // Email report to be removed after testing
     $end_time = new DateTime(current_time('mysql'));
     $execution_time = $start_time->diff($end_time)->s;
 
-    $to = "lotten@loopis.app";
+    $from = "ping@loopis.app";
+    $to = "admin@loopis.app";
     $subject = "⭕ Arkivering";
     $message = "
     <b>⭕ {$archived_count} annonser har arkiverats</b><br>
@@ -82,7 +91,7 @@ function loopis_cronjobs_archive() {
     ⏰ " . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . "<br>
     ";
     $headers = array(
-        'From: info@loopis.app',
+        "From: {$from}",
         'Content-Type: text/html; charset=UTF-8',
         'X-Emoji-Service: twemoji',
     );
@@ -90,13 +99,14 @@ function loopis_cronjobs_archive() {
     wp_mail($to, $subject, $message, $headers);
 }
 
+
 /** CRON: ARCHIVE */
 function loopis_cronjobs_archive_network() {
-    if (is_multisite(  )){
+    if (is_multisite(  )) {
 		$sites = get_sites(['fields' => 'ids']);
 		$exclude = get_option('loopis_excluded_archive') ?? false;
 		foreach ($sites as $site){
-			if ($exclude){
+			if ($exclude) {
 				if (in_array($site, (array) $exclude)){
 					continue;
 				}
