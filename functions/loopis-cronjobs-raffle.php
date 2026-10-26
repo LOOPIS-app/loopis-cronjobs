@@ -139,21 +139,23 @@ function loopis_cronjobs_raffle() {
 	} else { $locker_warning = '<b>⚠ Varning för skåp aktiv!</b>'; }
 
 	// Count active 'support' posts
-    $active_term = get_term_by('slug', 'active', 'support-category');
-	$support_args = array(
-        'post_type'      => 'support',
-        'posts_per_page' => -1,
-        'tax_query'      => array(
-            array(
-                'taxonomy' => 'support-category',
-                'field'    => 'term_id',
-                'terms'    => $active_term ? $active_term->term_id : 0,
-            ),
-        ),
-    );
-    $support_query = new WP_Query($support_args);
-    $support_current = $support_query->found_posts;
-
+	// Direct SQL since CPT/taxonomy are not registered when running from the main site's cron
+	global $wpdb;
+	$support_current = (int) $wpdb->get_var( $wpdb->prepare(
+		"SELECT COUNT(DISTINCT p.ID)
+		FROM {$wpdb->posts} p
+		INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = p.ID
+		INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+		INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+		WHERE p.post_type = %s
+		AND p.post_status = %s
+		AND tt.taxonomy = %s
+		AND t.slug = %s",
+		'support',
+		'publish',
+		'support-category',
+		'active'
+	) );
 	$support_symbol = $support_current > 0 ? '🔴' : '🟢';
 
 	// Count number of members
@@ -186,17 +188,21 @@ function loopis_cronjobs_raffle() {
     'fields' => 'ID',
 	]));
 	
-	// Get manager emails
-	$manager_emails = get_users(array(
+	// Get manager details (emails and display names)
+	$manager_emails = wp_list_pluck(get_users(array(
 		'role'   => 'manager',
 		'fields' => array('user_email')
-	));
-	$manager_emails = wp_list_pluck($manager_emails, 'user_email');
+	)), 'user_email');
+
+	$manager_names = wp_list_pluck(get_users(array(
+		'role'   => 'manager',
+		'fields' => array('display_name')
+	)), 'display_name');
 
 	// Set email details
 	$blog_name = get_bloginfo('name');
 	$date = current_time('d/m');
-	$weekday = current_time('l');
+	$weekday = wp_date('l');
 
 	// Calculate execution time
 	$end_time = new DateTime(current_time('mysql'));
@@ -204,10 +210,11 @@ function loopis_cronjobs_raffle() {
 	$execution_time = $interval->format('%s');
 	
 	// Prepare email
+	$from = "ping@loopis.app";
 	$to = "admin@loopis.app," . implode(', ', $manager_emails);
 	$subject = "🌈 " . $blog_name  . " (" . $weekday . " " . $date . ")";
 	$message = "
-	<p>📊 Här är dagens rapport från LOOPIS " . $blog_name . "</p>
+	<p>📊 Dagens rapport från <b>LOOPIS " . $blog_name . "</b></p>
 	
 	<h3>🎲 Lottning</h3>
 	<hr>
@@ -239,11 +246,11 @@ function loopis_cronjobs_raffle() {
 	<h3>🤖 Övrigt</h3>
 	<hr>
 	⏱ Tidsåtgång: {$execution_time} sekunder (" . $start_time->format('H:i:s') . " → " . $end_time->format('H:i:s') . ")<br>
-	💌 Mottagare: {$to}<br>
+	💌 Mottagare: " . implode(', ', $manager_names) . "<br>
 	";
 
 	$headers = array(
-		'From: info@loopis.app',
+		"From: {$from}",
 		'Content-Type: text/html; charset=UTF-8',
 		'X-Emoji-Service: twemoji'
 			);
